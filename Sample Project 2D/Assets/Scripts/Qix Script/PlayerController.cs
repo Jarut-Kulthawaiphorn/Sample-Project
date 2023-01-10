@@ -10,7 +10,7 @@ enum PlayerState
 public class PlayerController : MonoBehaviour
 {
     public float speedFact;
-    Vector3 newPos;
+    Vector3 targetPos;
 
     public List<Line> lines { get; private set; }
     Line currentLine;
@@ -26,8 +26,6 @@ public class PlayerController : MonoBehaviour
     float lastSign = 0.0f;
 
     bool drawingx;
-
-    float spiraldis = 0.03f;
 
     float inputX;
     float inputY;
@@ -105,21 +103,20 @@ public class PlayerController : MonoBehaviour
         }
 
         //Contain Target Position
-        newPos = transform.position + movement;
+        targetPos = transform.position + movement;
 
         if (state == PlayerState.OnWall)
         {
             //Check player on the solid line from target position
-            if (currentLine.ContainsBound(newPos))
+            if (currentLine.ContainsBound(targetPos))
             {
                 //Move player
-                transform.position = newPos;
-                //transform.Translate(inputX * speed, inputY * speed, 0);
+                transform.position = targetPos;
                 handled = true;
             }
-            else if (currentLine.ContainsUnbound(newPos) && (!Input.GetButton("Jump") || !ValidToMoveTo(newPos)))
+            else if (currentLine.ContainsUnbound(targetPos) && (!Input.GetButton("Jump") || !ValidToMoveTo(targetPos)))
             {
-                if ((newPos - currentLine.start).magnitude < (newPos - currentLine.end).magnitude)
+                if ((targetPos - currentLine.start).magnitude < (targetPos - currentLine.end).magnitude)
                 {
                     transform.position = currentLine.start;
                 }
@@ -134,10 +131,10 @@ public class PlayerController : MonoBehaviour
                 // @@ Issue: what about small movements
                 foreach (Line line in lines)
                 {
-                    if (line.ContainsBound(newPos))
+                    if (line.ContainsBound(targetPos))
                     {
                         currentLine = line;
-                        transform.position = newPos;
+                        transform.position = targetPos;
                         handled = true;
                         break;
                     }
@@ -146,12 +143,12 @@ public class PlayerController : MonoBehaviour
 
             if (!handled && Input.GetButton("Jump"))
             {
-                if ((movingx || movingy) && (ValidToMoveTo(newPos)))
+                if ((movingx || movingy) && (ValidToMoveTo(targetPos)))
                 {
                     state = PlayerState.Drawing;
                     drawingx = movingx;
                     PushDrawVector3(transform.position);
-                    transform.position = newPos;
+                    transform.position = targetPos;
                     currentSign = desSign;
                 }
             }
@@ -162,6 +159,7 @@ public class PlayerController : MonoBehaviour
             {
                 //To Check player is crossing the drawing line
                 bool crossing = false;
+                float spiraldis = 1f;
 
                 foreach (Line crossLine in drawingLines)
                 {
@@ -175,24 +173,20 @@ public class PlayerController : MonoBehaviour
                     }
                 }
 
-                if (crossing)
+                if (!ValidToMoveTo(targetPos) && !crossing)
                 {
-                    // can't move
-                }
-                else if (!ValidToMoveTo(newPos))
-                {
-                    if (InGrid(newPos))
+                    if (InGrid(targetPos))
                     {
                         if (drawingx)
                         {
                             // Moving horizontally.  
                             if (Mathf.Sign(inputX) > 0.0f)
                             {
-                                newPos.x = DrawRects.hitRect.xMin;
+                                targetPos.x = DrawRects.hitRect.xMin;
                             }
                             else
                             {
-                                newPos.x = DrawRects.hitRect.xMax;
+                                targetPos.x = DrawRects.hitRect.xMax;
                             }
                         }
                         else
@@ -200,29 +194,31 @@ public class PlayerController : MonoBehaviour
                             // Moving vertically.  
                             if (Mathf.Sign(inputY) > 0.0f)
                             {
-                                newPos.y = DrawRects.hitRect.yMin;
+                                targetPos.y = DrawRects.hitRect.yMin;
                             }
                             else
                             {
-                                newPos.y = DrawRects.hitRect.yMax;
+                                targetPos.y = DrawRects.hitRect.yMax;
                             }
                         }
                     }
                     else
                     {
-                        newPos = SnapToGrid(newPos); ;
+                        targetPos = new Vector3(Mathf.Clamp(targetPos.x, -mapWidth, mapWidth),
+                                                Mathf.Clamp(targetPos.y, -mapHeight, mapHeight),
+                                                0.0f);
                     }
 
                     foreach (Line line in lines)
                     {
-                        if (line.ContainsBound(newPos))
+                        if (line.ContainsBound(targetPos))
                         {
                             currentLine = line;
                             break;
                         }
                     }
 
-                    transform.position = newPos;
+                    transform.position = targetPos;
                     PushDrawVector3(transform.position);
 
                     FillDrawnArea();
@@ -243,7 +239,7 @@ public class PlayerController : MonoBehaviour
                         ((movingx == drawingx) && (currentSign == desSign)) || // moving the same direction as before
                         ((movingx != drawingx) &&
                          ((desSign == lastSign) ||
-                          ((newPos - drawingVector3s[drawingVector3s.Count - 1]).magnitude > spiraldis))))
+                          ((targetPos - drawingVector3s[drawingVector3s.Count - 1]).magnitude > spiraldis))))
                     {
                         // Valid to move this direction
 
@@ -256,7 +252,7 @@ public class PlayerController : MonoBehaviour
                             PushDrawVector3(transform.position);
                         }
 
-                        transform.position = newPos;
+                        transform.position = targetPos;
                     }
                 }
             }
@@ -280,47 +276,24 @@ public class PlayerController : MonoBehaviour
             drawingLines.Add(new Line(drawingVector3s[drawingVector3s.Count - 2], drawingVector3s[drawingVector3s.Count - 1]));
         }
 
-        MaybeAddVector3(xVector3s, yVector3s, vector3);
+        AddVector3(xVector3s, yVector3s, vector3);
         xVector3s.Sort();
         yVector3s.Sort();
     }
 
     //Check player can move to target position?
-    public bool ValidToMoveTo(Vector3 newPos)
+    public bool ValidToMoveTo(Vector3 targetPos)
     {
-        return InGrid(newPos) && !DrawRects.InRects(newPos);
+        return InGrid(targetPos) && !DrawRects.InRects(targetPos);
     }
 
     //Check Player is moving in gridbackground
-    public bool InGrid(Vector3 newPos)
+    public bool InGrid(Vector3 targetPos)
     {
-        return ((newPos.x >= -mapWidth) &&
-                (newPos.x <= mapWidth) &&
-                (newPos.y >= -mapHeight) &&
-                (newPos.y <= mapHeight));
-    }
-
-    /// <summary>
-    /// Snaps a Vecto3 back to being within the main grid.
-    /// </summary>
-    /// <param name="newPos">Attempted position</param>
-    /// <returns></returns>
-    Vector3 SnapToGrid(Vector3 newPos)
-    {
-        Vector3 snap;
-
-        if (InGrid(newPos))
-        {
-            snap = newPos;
-        }
-        else
-        {
-            snap = new Vector3(Mathf.Clamp(newPos.x, -mapWidth, mapHeight),
-                               Mathf.Clamp(newPos.y, -mapWidth, mapHeight),
-                               0.0f);
-        }
-
-        return snap;
+        return ((targetPos.x >= -mapWidth) &&
+                (targetPos.x <= mapWidth) &&
+                (targetPos.y >= -mapHeight) &&
+                (targetPos.y <= mapHeight));
     }
 
     void FillDrawnArea()
@@ -328,9 +301,6 @@ public class PlayerController : MonoBehaviour
         // Get dimensions
         int w = xVector3s.Count;
         int h = yVector3s.Count;
-
-        Debug.Log(w);
-        Debug.Log(h);
 
         // Work out edges.  
         // @@ Issue: includes irrelevant internal edges
@@ -359,19 +329,14 @@ public class PlayerController : MonoBehaviour
         //check zone to draw rect
         if (area1 <= area2)
         {
-            AddRectsToDeadZone(drawRects1);
+            DrawRects.AddRects(drawRects1);
             Debug.Log("Draw1");
         }
         else
         {
-            AddRectsToDeadZone(drawRects2);
+            DrawRects.AddRects(drawRects2);
             Debug.Log("Draw2");
         }
-    }
-
-    private static void AddRectsToDeadZone(List<Rect> drawRects1)
-    {
-        DrawRects.AddRects(drawRects1);
     }
 
     private void ExtractFloodStartVector3s(out int fillx1, out int filly1, out int fillx2, out int filly2)
@@ -524,7 +489,7 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    private static Vector3 MaybeAddVector3(List<float> xVector3s, List<float> yVector3s, Vector3 Vector3)
+    private static Vector3 AddVector3(List<float> xVector3s, List<float> yVector3s, Vector3 Vector3)
     {
         if (!xVector3s.Contains(Vector3.x))
         {
