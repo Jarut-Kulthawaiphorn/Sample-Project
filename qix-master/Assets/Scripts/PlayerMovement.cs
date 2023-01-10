@@ -522,7 +522,7 @@ public class PlayerMovement : MonoBehaviour
 
                 for (int ii = xl; ii < xr; ii++)
                 {
-                    JustLog("Adding hside [" + ii + "," + (ys - 1) + "]");
+                    //JustLog("Adding hside [" + ii + "," + (ys - 1) + "]");
                     hsides[ii, ys - 1] = true;
                 }
             }

@@ -5,6 +5,7 @@ public class DrawLines : MonoBehaviour
 {
     static List<Line> lines;
     static bool newLines = true;
+    [SerializeField] float width = 0.01f;
 
     void Start()
     {
@@ -16,11 +17,10 @@ public class DrawLines : MonoBehaviour
         if (newLines)
         {
             Mesh mesh = new Mesh();
-            float w = 0.01f;
 
             List<Vector3> verticesList = new List<Vector3>();
             List<Vector2> uvList = new List<Vector2>();
-            List<int> trianleList = new List<int>();
+            List<int> triangleList = new List<int>();
 
             Vector3 start, end;
             int lineCounter = 0;
@@ -33,34 +33,34 @@ public class DrawLines : MonoBehaviour
                 if (start.x < end.x)
                 {
                     //MWRDebug.Log("xxx1:" + lineCounter);
-                    verticesList.Add(end + new Vector3(w, w, 0.0f));
-                    verticesList.Add(end + new Vector3(w, -w, 0.0f));
-                    verticesList.Add(start + new Vector3(-w, w, 0.0f));
-                    verticesList.Add(start + new Vector3(-w, -w, 0.0f));
+                    verticesList.Add(end + new Vector3(width, width, 0.0f));
+                    verticesList.Add(end + new Vector3(width, -width, 0.0f));
+                    verticesList.Add(start + new Vector3(-width, width, 0.0f));
+                    verticesList.Add(start + new Vector3(-width, -width, 0.0f));
                 }
                 else if (start.x > end.x)
                 {
                     //MWRDebug.Log("xxx2:" + lineCounter);
-                    verticesList.Add(start + new Vector3(w, w, 0.0f));
-                    verticesList.Add(start + new Vector3(w, -w, 0.0f));
-                    verticesList.Add(end + new Vector3(-w, w, 0.0f));
-                    verticesList.Add(end + new Vector3(-w, -w, 0.0f));
+                    verticesList.Add(start + new Vector3(width, width, 0.0f));
+                    verticesList.Add(start + new Vector3(width, -width, 0.0f));
+                    verticesList.Add(end + new Vector3(-width, width, 0.0f));
+                    verticesList.Add(end + new Vector3(-width, -width, 0.0f));
                 }
                 else if (start.y < end.y)
                 {
                     //MWRDebug.Log("xxx3:" + lineCounter);
-                    verticesList.Add(end + new Vector3(w, w, 0.0f));
-                    verticesList.Add(start + new Vector3(w, -w, 0.0f));
-                    verticesList.Add(end + new Vector3(-w, w, 0.0f));
-                    verticesList.Add(start + new Vector3(-w, -w, 0.0f));
+                    verticesList.Add(end + new Vector3(width, width, 0.0f));
+                    verticesList.Add(start + new Vector3(width, -width, 0.0f));
+                    verticesList.Add(end + new Vector3(-width, width, 0.0f));
+                    verticesList.Add(start + new Vector3(-width, -width, 0.0f));
                 }
                 else
                 {
                     //MWRDebug.Log("xxx4:" + lineCounter);
-                    verticesList.Add(start + new Vector3(w, w, 0.0f));
-                    verticesList.Add(end + new Vector3(w, -w, 0.0f));
-                    verticesList.Add(start + new Vector3(-w, w, 0.0f));
-                    verticesList.Add(end + new Vector3(-w, -w, 0.0f));
+                    verticesList.Add(start + new Vector3(width, width, 0.0f));
+                    verticesList.Add(end + new Vector3(width, -width, 0.0f));
+                    verticesList.Add(start + new Vector3(-width, width, 0.0f));
+                    verticesList.Add(end + new Vector3(-width, -width, 0.0f));
                 }
 
                 uvList.Add(new Vector2(1, 1));
@@ -68,19 +68,19 @@ public class DrawLines : MonoBehaviour
                 uvList.Add(new Vector2(0, 1));
                 uvList.Add(new Vector2(0, 0));
 
-                trianleList.Add(4 * lineCounter + 0);
-                trianleList.Add(4 * lineCounter + 1);
-                trianleList.Add(4 * lineCounter + 2);
-                trianleList.Add(4 * lineCounter + 2);
-                trianleList.Add(4 * lineCounter + 1);
-                trianleList.Add(4 * lineCounter + 3);
+                triangleList.Add(4 * lineCounter + 0);
+                triangleList.Add(4 * lineCounter + 1);
+                triangleList.Add(4 * lineCounter + 2);
+                triangleList.Add(4 * lineCounter + 2);
+                triangleList.Add(4 * lineCounter + 1);
+                triangleList.Add(4 * lineCounter + 3);
 
                 lineCounter++;
             }
 
             Vector3[] vertices = verticesList.ToArray();
             Vector2[] uv = uvList.ToArray();
-            int[] triangles = trianleList.ToArray();
+            int[] triangles = triangleList.ToArray();
 
             mesh.vertices = vertices;
             mesh.uv = uv;
@@ -96,7 +96,7 @@ public class DrawLines : MonoBehaviour
             newLines = false;
         }
     }
-      
+
     public static void SetLines(List<Line> lines)
     {
         DrawLines.lines = lines;

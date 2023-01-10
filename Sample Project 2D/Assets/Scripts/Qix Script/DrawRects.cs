@@ -16,9 +16,35 @@ public class DrawRects : MonoBehaviour
 
     public static Rect hitRect;
 
+    List<Rect> sourceRects;
+    float z = 0.03f;
+
+    int verticesOffset;
+    int uvOffset;
+    int triangleOffset;
+
     void Start()
     {
         rects = new List<Rect>();
+        init();
+    }
+
+    void init()
+    {
+        mesh = new Mesh();
+
+        vertices = new Vector3[rects.Count * 4];
+        uv = new Vector2[rects.Count * 4];
+        triangles = new int[rects.Count * 6];
+
+        verticesOffset = 0;
+        uvOffset = 0;
+        triangleOffset = 0;
+
+        sourceRects = rects;
+
+        score = 0.0f;
+
     }
 
     void Update()
@@ -32,14 +58,7 @@ public class DrawRects : MonoBehaviour
 
     private void NewWay()
     {
-        List<Rect> sourceRects;
-        float z = 0.03f;
-
-        int verticesOffset;
-        int uvOffset;
-        int triangleOffset;
-
-        if ((newRectList != null) && true)
+        if (newRectList != null)
         {
 
             verticesOffset = vertices.Length;
@@ -50,49 +69,29 @@ public class DrawRects : MonoBehaviour
             System.Array.Resize(ref uv, uv.Length + newRectList.Count * 4);
             System.Array.Resize(ref triangles, triangles.Length + newRectList.Count * 6);
 
-            sourceRects = newRectList;
-        }
-        else
-        {
-            mesh = new Mesh();
-
-            vertices = new Vector3[rects.Count * 4];
-            uv = new Vector2[rects.Count * 4];
-            triangles = new int[rects.Count * 6];
-
-            verticesOffset = 0;
-            uvOffset = 0;
-            triangleOffset = 0;
-
-            sourceRects = rects;
-
-            score = 0.0f;
+            this.sourceRects = newRectList;
         }
 
-        Rect rect;
-
-        for (int ii = 0; ii < sourceRects.Count; ii++)
+        for (int i = 0; i < this.sourceRects.Count; i++)
         {
-            rect = sourceRects[ii];
+            vertices[verticesOffset + i * 4 + 0] = new Vector3(sourceRects[i].xMax, sourceRects[i].yMax, z);
+            vertices[verticesOffset + i * 4 + 1] = new Vector3(sourceRects[i].xMax, sourceRects[i].yMin, z);
+            vertices[verticesOffset + i * 4 + 2] = new Vector3(sourceRects[i].xMin, sourceRects[i].yMax, z);
+            vertices[verticesOffset + i * 4 + 3] = new Vector3(sourceRects[i].xMin, sourceRects[i].yMin, z);
 
-            vertices[verticesOffset + ii * 4 + 0] = new Vector3(rect.xMax, rect.yMax, z);
-            vertices[verticesOffset + ii * 4 + 1] = new Vector3(rect.xMax, rect.yMin, z);
-            vertices[verticesOffset + ii * 4 + 2] = new Vector3(rect.xMin, rect.yMax, z);
-            vertices[verticesOffset + ii * 4 + 3] = new Vector3(rect.xMin, rect.yMin, z);
+            uv[uvOffset + i * 4 + 0] = new Vector2((vertices[verticesOffset + i * 4 + 0].x + 1) / 2, (vertices[verticesOffset + i * 4 + 0].y + 1) / 2);
+            uv[uvOffset + i * 4 + 1] = new Vector2((vertices[verticesOffset + i * 4 + 1].x + 1) / 2, (vertices[verticesOffset + i * 4 + 1].y + 1) / 2);
+            uv[uvOffset + i * 4 + 2] = new Vector2((vertices[verticesOffset + i * 4 + 2].x + 1) / 2, (vertices[verticesOffset + i * 4 + 2].y + 1) / 2);
+            uv[uvOffset + i * 4 + 3] = new Vector2((vertices[verticesOffset + i * 4 + 3].x + 1) / 2, (vertices[verticesOffset + i * 4 + 3].y + 1) / 2);
 
-            uv[uvOffset + ii * 4 + 0] = new Vector2(1, 1);
-            uv[uvOffset + ii * 4 + 1] = new Vector2(1, 0);
-            uv[uvOffset + ii * 4 + 2] = new Vector2(0, 1);
-            uv[uvOffset + ii * 4 + 3] = new Vector2(0, 0);
+            triangles[triangleOffset + i * 6 + 0] = (verticesOffset + 4 * i + 0);
+            triangles[triangleOffset + i * 6 + 1] = (verticesOffset + 4 * i + 1);
+            triangles[triangleOffset + i * 6 + 2] = (verticesOffset + 4 * i + 2);
+            triangles[triangleOffset + i * 6 + 3] = (verticesOffset + 4 * i + 2);
+            triangles[triangleOffset + i * 6 + 4] = (verticesOffset + 4 * i + 1);
+            triangles[triangleOffset + i * 6 + 5] = (verticesOffset + 4 * i + 3);
 
-            triangles[triangleOffset + ii * 6 + 0] = (verticesOffset + 4 * ii + 0);
-            triangles[triangleOffset + ii * 6 + 1] = (verticesOffset + 4 * ii + 1);
-            triangles[triangleOffset + ii * 6 + 2] = (verticesOffset + 4 * ii + 2);
-            triangles[triangleOffset + ii * 6 + 3] = (verticesOffset + 4 * ii + 2);
-            triangles[triangleOffset + ii * 6 + 4] = (verticesOffset + 4 * ii + 1);
-            triangles[triangleOffset + ii * 6 + 5] = (verticesOffset + 4 * ii + 3);
-
-            score += (rect.width * rect.height);
+            score += (sourceRects[i].width * sourceRects[i].height);
         }
 
         mesh.vertices = vertices;
@@ -132,4 +131,3 @@ public class DrawRects : MonoBehaviour
         return rc;
     }
 }
-
