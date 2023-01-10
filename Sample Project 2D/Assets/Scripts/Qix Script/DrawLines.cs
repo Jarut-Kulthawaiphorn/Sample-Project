@@ -1,11 +1,12 @@
-using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
+using UnityEngine;
+
+[RequireComponent(typeof(MeshRenderer)), RequireComponent(typeof(MeshFilter))]
 public class DrawLines : MonoBehaviour
 {
     static List<Line> lines;
     static bool newLines = true;
-    [SerializeField] float width = 0.01f;
+    [SerializeField] float width = 1f;
 
     void Start()
     {
@@ -86,10 +87,6 @@ public class DrawLines : MonoBehaviour
             mesh.uv = uv;
             mesh.triangles = triangles;
             mesh.RecalculateNormals();
-
-            MWRDebug.Log("V" + mesh.vertexCount + "," + mesh.vertices.Length);
-            MWRDebug.Log("U" + mesh.uv.Length);
-            MWRDebug.Log("T" + mesh.triangles.Length);
 
             GetComponent<MeshFilter>().mesh = mesh;
 

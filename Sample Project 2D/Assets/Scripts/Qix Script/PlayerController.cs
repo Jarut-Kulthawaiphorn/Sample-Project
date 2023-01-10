@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Rendering;
 
 enum PlayerState
 {
@@ -8,9 +7,10 @@ enum PlayerState
     Drawing
 }
 
-public class PlayerMovement : MonoBehaviour
+public class PlayerController : MonoBehaviour
 {
     public float speedFact;
+    Vector3 newPos;
 
     public List<Line> lines { get; private set; }
     Line currentLine;
@@ -22,7 +22,7 @@ public class PlayerMovement : MonoBehaviour
     List<float> xVector3s;
     List<float> yVector3s;
 
-    float curSign = 0.0f;
+    float currentSign = 0.0f;
     float lastSign = 0.0f;
 
     bool drawingx;
@@ -32,27 +32,34 @@ public class PlayerMovement : MonoBehaviour
     float inputX;
     float inputY;
 
+    float mapWidth;
+    float mapHeight;
+
     void Start()
     {
         lines = new List<Line>();
+        
+        //Get Map scale
+        mapWidth = CreateGridBackground.instance.width;
+        mapHeight = CreateGridBackground.instance.heigh;
 
         //Wall Line
-        lines.Add(new Line(new Vector3(1, 1, 0), new Vector3(1, -1, 0)));
-        lines.Add(new Line(new Vector3(1, -1, 0), new Vector3(-1, -1, 0)));
-        lines.Add(new Line(new Vector3(-1, -1, 0), new Vector3(-1, 1, 0)));
-        lines.Add(new Line(new Vector3(-1, 1, 0), new Vector3(1, 1, 0)));
+        lines.Add(new Line(new Vector3(mapWidth, mapHeight, 0), new Vector3(mapWidth, -mapHeight, 0)));
+        lines.Add(new Line(new Vector3(mapWidth, -mapHeight, 0), new Vector3(-mapWidth, -mapHeight, 0)));
+        lines.Add(new Line(new Vector3(-mapWidth, -mapHeight, 0), new Vector3(-mapWidth, mapHeight, 0)));
+        lines.Add(new Line(new Vector3(-mapWidth, mapHeight, 0), new Vector3(mapWidth, mapHeight, 0)));
 
         xVector3s = new List<float>();
         yVector3s = new List<float>();
 
-        xVector3s.Add(-1.0f);
-        xVector3s.Add(1.0f);
-        yVector3s.Add(-1.0f);
-        yVector3s.Add(1.0f);
+        xVector3s.Add(-mapWidth);
+        xVector3s.Add(mapWidth);
+        yVector3s.Add(-mapHeight);
+        yVector3s.Add(mapHeight);
 
-        currentLine = lines[0];
+        currentLine = lines[2];
 
-        transform.position = (currentLine.start * 0.5f + currentLine.end * 0.5f);
+        transform.position = (currentLine.start);
         state = PlayerState.OnWall;
 
         drawingVector3s = new List<Vector3>();
@@ -98,7 +105,7 @@ public class PlayerMovement : MonoBehaviour
         }
 
         //Contain Target Position
-        Vector3 newPos = transform.position + movement;
+        newPos = transform.position + movement;
 
         if (state == PlayerState.OnWall)
         {
@@ -110,7 +117,7 @@ public class PlayerMovement : MonoBehaviour
                 //transform.Translate(inputX * speed, inputY * speed, 0);
                 handled = true;
             }
-            else if (currentLine.ContainsUnbound(newPos) && (!Input.GetButton("Fire1") || !ValidToMoveTo(newPos)))
+            else if (currentLine.ContainsUnbound(newPos) && (!Input.GetButton("Jump") || !ValidToMoveTo(newPos)))
             {
                 if ((newPos - currentLine.start).magnitude < (newPos - currentLine.end).magnitude)
                 {
@@ -137,7 +144,7 @@ public class PlayerMovement : MonoBehaviour
                 }
             }
 
-            if (!handled && Input.GetButton("Fire1"))
+            if (!handled && Input.GetButton("Jump"))
             {
                 if ((movingx || movingy) && (ValidToMoveTo(newPos)))
                 {
@@ -145,7 +152,7 @@ public class PlayerMovement : MonoBehaviour
                     drawingx = movingx;
                     PushDrawVector3(transform.position);
                     transform.position = newPos;
-                    curSign = desSign;
+                    currentSign = desSign;
                 }
             }
         }
@@ -227,13 +234,13 @@ public class PlayerMovement : MonoBehaviour
                     drawingVector3s.Clear();
 
                     state = PlayerState.OnWall;
-                    curSign = 0.0f;
+                    currentSign = 0.0f;
                     lastSign = 0.0f;
                 }
                 else
                 {
-                    if ((curSign == 0.0f) || // first movement always OK
-                        ((movingx == drawingx) && (curSign == desSign)) || // moving the same direction as before
+                    if ((currentSign == 0.0f) || // first movement always OK
+                        ((movingx == drawingx) && (currentSign == desSign)) || // moving the same direction as before
                         ((movingx != drawingx) &&
                          ((desSign == lastSign) ||
                           ((newPos - drawingVector3s[drawingVector3s.Count - 1]).magnitude > spiraldis))))
@@ -242,8 +249,8 @@ public class PlayerMovement : MonoBehaviour
 
                         if (movingx != drawingx)
                         {
-                            lastSign = curSign;
-                            curSign = desSign;
+                            lastSign = currentSign;
+                            currentSign = desSign;
 
                             drawingx = movingx;
                             PushDrawVector3(transform.position);
@@ -263,34 +270,34 @@ public class PlayerMovement : MonoBehaviour
     ///  - adds the Vector3 to the drawingVector3s list
     ///  - if there's now a line formed, adds that line to the drawing line list
     /// </summary>
-    /// <param name="Vector3"></param>
-    void PushDrawVector3(Vector3 Vector3)
+    /// <param name="vector3"></param>
+    void PushDrawVector3(Vector3 vector3)
     {
-        drawingVector3s.Add(Vector3);
+        drawingVector3s.Add(vector3);
 
         if (drawingVector3s.Count > 1)
         {
             drawingLines.Add(new Line(drawingVector3s[drawingVector3s.Count - 2], drawingVector3s[drawingVector3s.Count - 1]));
         }
 
-        MaybeAddVector3(xVector3s, yVector3s, Vector3);
+        MaybeAddVector3(xVector3s, yVector3s, vector3);
         xVector3s.Sort();
         yVector3s.Sort();
     }
 
     //Check player can move to target position?
-    public static bool ValidToMoveTo(Vector3 newPos)
+    public bool ValidToMoveTo(Vector3 newPos)
     {
         return InGrid(newPos) && !DrawRects.InRects(newPos);
     }
 
     //Check Player is moving in gridbackground
-    public static bool InGrid(Vector3 newPos)
+    public bool InGrid(Vector3 newPos)
     {
-        return ((newPos.x >= -1.0f) &&
-                (newPos.x <= 1.0f) &&
-                (newPos.y >= -1.0f) &&
-                (newPos.y <= 1.0f));
+        return ((newPos.x >= -mapWidth) &&
+                (newPos.x <= mapWidth) &&
+                (newPos.y >= -mapHeight) &&
+                (newPos.y <= mapHeight));
     }
 
     /// <summary>
@@ -308,8 +315,8 @@ public class PlayerMovement : MonoBehaviour
         }
         else
         {
-            snap = new Vector3(Mathf.Clamp(newPos.x, -1.0f, 1.0f),
-                               Mathf.Clamp(newPos.y, -1.0f, 1.0f),
+            snap = new Vector3(Mathf.Clamp(newPos.x, -mapWidth, mapHeight),
+                               Mathf.Clamp(newPos.y, -mapWidth, mapHeight),
                                0.0f);
         }
 
@@ -321,6 +328,9 @@ public class PlayerMovement : MonoBehaviour
         // Get dimensions
         int w = xVector3s.Count;
         int h = yVector3s.Count;
+
+        Debug.Log(w);
+        Debug.Log(h);
 
         // Work out edges.  
         // @@ Issue: includes irrelevant internal edges
@@ -341,9 +351,6 @@ public class PlayerMovement : MonoBehaviour
         List<Rect> drawRects2 = new List<Rect>();
         float area1 = 0.0f;
         float area2 = 0.0f;
-
-        bool baddyIn1;
-        bool baddyIn2;
 
         //Contain area
         area1 = FloodFill(w, h, vsides, hsides, drawRects1, fillx1, filly1);
@@ -480,8 +487,8 @@ public class PlayerMovement : MonoBehaviour
     {
         foreach (Line line in lines)
         {
-            if ((Mathf.Abs(line.start.x) == 1.0f) &&
-                (Mathf.Abs(line.start.y) == 1.0f))
+            if ((Mathf.Abs(line.start.x) == mapWidth) &&
+                (Mathf.Abs(line.start.y) == mapHeight))
             {
                 // Starts in a corner - ignore it
                 continue;

@@ -1,16 +1,11 @@
 using UnityEngine;
 
+[RequireComponent(typeof(MeshRenderer)), RequireComponent(typeof(MeshFilter))]
 public class PlayerTrail : MonoBehaviour
 {
 
-    public PlayerMovement player;
-    // Use this for initialization
-    void Start()
-    {
-        player = GameObject.Find("Player").GetComponent<PlayerMovement>();
-    }
+    public PlayerController player;
 
-    // Update is called once per frame
     void Update()
     {
         var lines = player.GetDrawingLinesInclLive().ToArray();

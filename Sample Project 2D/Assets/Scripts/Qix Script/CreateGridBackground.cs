@@ -1,11 +1,20 @@
 using UnityEngine;
-using System.Collections;
 
 [RequireComponent(typeof(MeshRenderer)), RequireComponent(typeof(MeshFilter))]
 public class CreateGridBackground : MonoBehaviour
 {
-    public float x;
-    public float y;
+    public float width;
+    public float heigh;
+    public static CreateGridBackground instance;
+
+    private void Awake()
+    {
+        if(instance != null)
+        {
+            Destroy(instance);
+        }
+        instance = this;
+    }
 
     void Start()
     {
@@ -20,10 +29,10 @@ public class CreateGridBackground : MonoBehaviour
         //plane shape
         Vector3[] vertices = new Vector3[]
         {
-            new Vector3( x,  y, z),
-            new Vector3( x, -y, z),
-            new Vector3(-x,  y, z),
-            new Vector3(-x, -y, z),
+            new Vector3( width,  heigh, z),
+            new Vector3( width, -heigh, z),
+            new Vector3(-width,  heigh, z),
+            new Vector3(-width, -heigh, z),
         };
 
         Vector2[] uv = new Vector2[]
@@ -47,21 +56,5 @@ public class CreateGridBackground : MonoBehaviour
         mesh.RecalculateNormals();
 
         return mesh;
-    }
-
-    public float speed;
-
-    void Update()
-    {
-        Mesh mesh = GetComponent<MeshFilter>().mesh;
-        Vector3[] normals = mesh.normals;
-        Quaternion rotation = Quaternion.AngleAxis(Time.deltaTime * speed, Vector3.up);
-        int i = 0;
-        while (i < normals.Length)
-        {
-            normals[i] = rotation * normals[i];
-            i++;
-        }
-        mesh.normals = normals;
     }
 }

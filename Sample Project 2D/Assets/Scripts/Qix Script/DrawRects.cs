@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[RequireComponent(typeof(MeshRenderer)), RequireComponent(typeof(MeshFilter))]
 public class DrawRects : MonoBehaviour
 {
     static List<Rect> rects;
@@ -22,6 +23,9 @@ public class DrawRects : MonoBehaviour
     int verticesOffset;
     int uvOffset;
     int triangleOffset;
+
+    float mapWidth;
+    float mapHeight;
 
     void Start()
     {
@@ -45,6 +49,8 @@ public class DrawRects : MonoBehaviour
 
         score = 0.0f;
 
+        mapWidth = CreateGridBackground.instance.width;
+        mapHeight = CreateGridBackground.instance.heigh;
     }
 
     void Update()
@@ -58,6 +64,7 @@ public class DrawRects : MonoBehaviour
 
     private void NewWay()
     {
+        
         if (newRectList != null)
         {
 
@@ -79,10 +86,10 @@ public class DrawRects : MonoBehaviour
             vertices[verticesOffset + i * 4 + 2] = new Vector3(sourceRects[i].xMin, sourceRects[i].yMax, z);
             vertices[verticesOffset + i * 4 + 3] = new Vector3(sourceRects[i].xMin, sourceRects[i].yMin, z);
 
-            uv[uvOffset + i * 4 + 0] = new Vector2((vertices[verticesOffset + i * 4 + 0].x + 1) / 2, (vertices[verticesOffset + i * 4 + 0].y + 1) / 2);
-            uv[uvOffset + i * 4 + 1] = new Vector2((vertices[verticesOffset + i * 4 + 1].x + 1) / 2, (vertices[verticesOffset + i * 4 + 1].y + 1) / 2);
-            uv[uvOffset + i * 4 + 2] = new Vector2((vertices[verticesOffset + i * 4 + 2].x + 1) / 2, (vertices[verticesOffset + i * 4 + 2].y + 1) / 2);
-            uv[uvOffset + i * 4 + 3] = new Vector2((vertices[verticesOffset + i * 4 + 3].x + 1) / 2, (vertices[verticesOffset + i * 4 + 3].y + 1) / 2);
+            uv[uvOffset + i * 4 + 0] = new Vector2((sourceRects[i].xMax + mapWidth / 2) / mapWidth, (sourceRects[i].yMax + mapHeight / 2) / mapHeight);
+            uv[uvOffset + i * 4 + 1] = new Vector2((sourceRects[i].xMax + mapWidth / 2) / mapWidth, (sourceRects[i].yMin + mapHeight / 2) / mapHeight);
+            uv[uvOffset + i * 4 + 2] = new Vector2((sourceRects[i].xMin + mapWidth / 2) / mapWidth, (sourceRects[i].yMax + mapHeight / 2) / mapHeight);
+            uv[uvOffset + i * 4 + 3] = new Vector2((sourceRects[i].xMin + mapWidth / 2) / mapWidth, (sourceRects[i].yMin + mapHeight / 2) / mapHeight);
 
             triangles[triangleOffset + i * 6 + 0] = (verticesOffset + 4 * i + 0);
             triangles[triangleOffset + i * 6 + 1] = (verticesOffset + 4 * i + 1);
