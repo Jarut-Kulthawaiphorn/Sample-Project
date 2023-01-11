@@ -4,9 +4,11 @@ using UnityEngine;
 [RequireComponent(typeof(MeshRenderer)), RequireComponent(typeof(MeshFilter))]
 public class DrawRects : MonoBehaviour
 {
+    public static DrawRects instance;
+
     static List<Rect> rects;
     static List<Rect> newRectList;
-    static bool newRects = true;
+    static bool newRects;
 
     Vector3[] vertices;
     Vector2[] uv;
@@ -24,19 +26,23 @@ public class DrawRects : MonoBehaviour
     int uvOffset;
     int triangleOffset;
 
+    [SerializeField] GameObject map;
     float mapWidth;
     float mapHeight;
 
-    void Start()
+    private void Awake()
     {
-        rects = new List<Rect>();
-        init();
+        if (instance != null)
+        {
+            Destroy(instance);
+        }
+        instance = this;
     }
 
     void init()
     {
         mesh = new Mesh();
-
+        rects = new List<Rect>();
         vertices = new Vector3[rects.Count * 4];
         uv = new Vector2[rects.Count * 4];
         triangles = new int[rects.Count * 6];
@@ -49,22 +55,18 @@ public class DrawRects : MonoBehaviour
 
         score = 0.0f;
 
-        mapWidth = CreateGridBackground.instance.width;
-        mapHeight = CreateGridBackground.instance.heigh;
+        mapWidth = map.GetComponent<SpriteRenderer>().size.x;
+        mapHeight = map.GetComponent<SpriteRenderer>().size.y;
+    }
+    void Start()
+    {
+        init();
     }
 
-    void Update()
+    public void AddRects(List<Rect> rects)
     {
-        if (newRects)
-        {
-            NewWay();
-        }
-    }
-
-
-    private void NewWay()
-    {
-        
+        DrawRects.rects.AddRange(rects);
+        DrawRects.newRectList = rects;
         if (newRectList != null)
         {
 
@@ -111,13 +113,6 @@ public class DrawRects : MonoBehaviour
         GetComponent<MeshFilter>().mesh = mesh;
 
         newRects = false;
-    }
-
-    public static void AddRects(List<Rect> rects)
-    {
-        DrawRects.rects.AddRange(rects);
-        DrawRects.newRectList = rects;
-        newRects = true;
     }
 
 

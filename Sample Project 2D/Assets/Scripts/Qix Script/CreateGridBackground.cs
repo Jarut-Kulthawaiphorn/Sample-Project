@@ -5,6 +5,10 @@ public class CreateGridBackground : MonoBehaviour
 {
     public float width;
     public float heigh;
+
+    [HideInInspector] public float x;
+    [HideInInspector] public float y;
+
     public static CreateGridBackground instance;
 
     private void Awake()
@@ -14,11 +18,13 @@ public class CreateGridBackground : MonoBehaviour
             Destroy(instance);
         }
         instance = this;
+        x = width / 2;
+        y = heigh / 2;
     }
 
     void Start()
     {
-        GetComponent<MeshFilter>().mesh = CreatePlaneMesh();
+        //GetComponent<MeshFilter>().mesh = CreatePlaneMesh();
     }
 
     Mesh CreatePlaneMesh()
@@ -29,10 +35,10 @@ public class CreateGridBackground : MonoBehaviour
         //plane shape
         Vector3[] vertices = new Vector3[]
         {
-            new Vector3( width,  heigh, z),
-            new Vector3( width, -heigh, z),
-            new Vector3(-width,  heigh, z),
-            new Vector3(-width, -heigh, z),
+            new Vector3( x,  y, z),
+            new Vector3( x, -y, z),
+            new Vector3(-x,  y, z),
+            new Vector3(-x, -y, z),
         };
 
         Vector2[] uv = new Vector2[]

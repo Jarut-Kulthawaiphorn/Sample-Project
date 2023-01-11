@@ -4,17 +4,29 @@ using UnityEngine;
 [RequireComponent(typeof(MeshRenderer)), RequireComponent(typeof(MeshFilter))]
 public class DrawLines : MonoBehaviour
 {
+    public static DrawLines instance;
+
     static List<Line> lines;
     static bool newLines = true;
     [SerializeField] float width = 1f;
+
+    private void Awake()
+    {
+        if (instance != null)
+        {
+            Destroy(instance);
+        }
+        instance = this;
+    }
 
     void Start()
     {
         lines = new List<Line>();
     }
 
-    void Update()
+    public void SetLines(List<Line> lines)
     {
+        DrawLines.lines = lines;
         if (newLines)
         {
             Mesh mesh = new Mesh();
@@ -89,14 +101,6 @@ public class DrawLines : MonoBehaviour
             mesh.RecalculateNormals();
 
             GetComponent<MeshFilter>().mesh = mesh;
-
-            newLines = false;
         }
-    }
-
-    public static void SetLines(List<Line> lines)
-    {
-        DrawLines.lines = lines;
-        newLines = true;
     }
 }

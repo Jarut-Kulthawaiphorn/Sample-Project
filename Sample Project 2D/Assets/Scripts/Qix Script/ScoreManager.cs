@@ -18,12 +18,6 @@ public class ScoreManager : MonoBehaviour
         Dead = false;
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-
-    }
-
     void OnGUI()
     {
         int pc = (int)(100.0f * Score / 4.0f);

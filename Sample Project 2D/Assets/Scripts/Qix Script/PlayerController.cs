@@ -9,7 +9,7 @@ enum PlayerState
 
 public class PlayerController : MonoBehaviour
 {
-    public float speedFact;
+    public float speed;
     Vector3 targetPos;
 
     public List<Line> lines { get; private set; }
@@ -27,19 +27,33 @@ public class PlayerController : MonoBehaviour
 
     bool drawingx;
 
+    /// <summary>
+    /// Define distance between player and the drawing line
+    /// </summary>
+    [SerializeField] float spiralDistance = 0.01f;
+
     float inputX;
     float inputY;
 
+    [SerializeField] GameObject map;
     float mapWidth;
     float mapHeight;
+
+    Vector3 movement;
+    bool movingx;
+    bool movingy;
+    bool handled;
+    float desSign;
+
+    float deltaTime;
 
     void Start()
     {
         lines = new List<Line>();
-        
+
         //Get Map scale
-        mapWidth = CreateGridBackground.instance.width;
-        mapHeight = CreateGridBackground.instance.heigh;
+        mapWidth = map.GetComponent<SpriteRenderer>().size.x / 2;
+        mapHeight = map.GetComponent<SpriteRenderer>().size.y / 2;
 
         //Wall Line
         lines.Add(new Line(new Vector3(mapWidth, mapHeight, 0), new Vector3(mapWidth, -mapHeight, 0)));
@@ -57,14 +71,14 @@ public class PlayerController : MonoBehaviour
 
         currentLine = lines[2];
 
-        transform.position = (currentLine.start);
         state = PlayerState.OnWall;
 
         drawingVector3s = new List<Vector3>();
         drawingLines = new List<Line>();
 
         //Draw Wall Line
-        DrawLines.SetLines(lines);
+        DrawLines.instance.SetLines(lines);
+        transform.position = currentLine.start;
     }
 
     void Update()
@@ -72,13 +86,10 @@ public class PlayerController : MonoBehaviour
         // @@ Issue: too latent
         inputX = Input.GetAxis("Horizontal");
         inputY = Input.GetAxis("Vertical");
-
-        Vector3 movement;
-        bool movingx = false;
-        bool movingy = false;
-        bool handled = false;
-        float speed = speedFact * Time.deltaTime;
-        float desSign;
+        movingx = false;
+        movingy = false;
+        handled = false;
+        deltaTime = Time.deltaTime;
 
         //Calculate Target Position to move
         if (Mathf.Max(Mathf.Abs(inputX), Mathf.Abs(inputY)) < 0.3f)
@@ -90,13 +101,13 @@ public class PlayerController : MonoBehaviour
         {
             if (Mathf.Abs(inputX) > Mathf.Abs(inputY))
             {
-                movement = new Vector3(speed * Mathf.Sign(inputX), 0.0f, 0.0f);
+                movement = new Vector3(speed * deltaTime * Mathf.Sign(inputX), 0.0f, 0.0f);
                 movingx = true;
                 desSign = Mathf.Sign(inputX);
             }
             else
             {
-                movement = new Vector3(0.0f, speed * Mathf.Sign(inputY), 0.0f);
+                movement = new Vector3(0.0f, speed * deltaTime * Mathf.Sign(inputY), 0.0f);
                 movingy = true;
                 desSign = Mathf.Sign(inputY);
             }
@@ -114,7 +125,7 @@ public class PlayerController : MonoBehaviour
                 transform.position = targetPos;
                 handled = true;
             }
-            else if (currentLine.ContainsUnbound(targetPos) && (!Input.GetButton("Jump") || !ValidToMoveTo(targetPos)))
+            else if (currentLine.ContainsUnbound(targetPos) && (!Input.GetKeyDown(KeyCode.Space) || !ValidToMoveTo(targetPos)))
             {
                 if ((targetPos - currentLine.start).magnitude < (targetPos - currentLine.end).magnitude)
                 {
@@ -141,7 +152,7 @@ public class PlayerController : MonoBehaviour
                 }
             }
 
-            if (!handled && Input.GetButton("Jump"))
+            if (!handled && Input.GetKeyDown(KeyCode.Space))
             {
                 if ((movingx || movingy) && (ValidToMoveTo(targetPos)))
                 {
@@ -159,21 +170,22 @@ public class PlayerController : MonoBehaviour
             {
                 //To Check player is crossing the drawing line
                 bool crossing = false;
-                float spiraldis = 1f;
 
                 foreach (Line crossLine in drawingLines)
                 {
                     if (LineIntersectsLine(crossLine.start,
                                            crossLine.end,
                                            transform.position,
-                                           transform.position + movement.normalized * spiraldis))
+                                           transform.position + movement.normalized * spiralDistance))
                     {
                         crossing = true;
                         break;
                     }
                 }
 
-                if (!ValidToMoveTo(targetPos) && !crossing)
+                if (crossing) { }
+
+                else if (!ValidToMoveTo(targetPos))
                 {
                     if (InGrid(targetPos))
                     {
@@ -224,7 +236,7 @@ public class PlayerController : MonoBehaviour
                     FillDrawnArea();
 
                     lines.AddRange(drawingLines);
-                    DrawLines.SetLines(lines);
+                    DrawLines.instance.SetLines(lines);
 
                     drawingLines.Clear();
                     drawingVector3s.Clear();
@@ -239,7 +251,7 @@ public class PlayerController : MonoBehaviour
                         ((movingx == drawingx) && (currentSign == desSign)) || // moving the same direction as before
                         ((movingx != drawingx) &&
                          ((desSign == lastSign) ||
-                          ((targetPos - drawingVector3s[drawingVector3s.Count - 1]).magnitude > spiraldis))))
+                          ((targetPos - drawingVector3s[drawingVector3s.Count - 1]).magnitude > spiralDistance))))
                     {
                         // Valid to move this direction
 
@@ -329,13 +341,12 @@ public class PlayerController : MonoBehaviour
         //check zone to draw rect
         if (area1 <= area2)
         {
-            DrawRects.AddRects(drawRects1);
-            Debug.Log("Draw1");
+
+            DrawRects.instance.AddRects(drawRects1);
         }
         else
         {
-            DrawRects.AddRects(drawRects2);
-            Debug.Log("Draw2");
+            DrawRects.instance.AddRects(drawRects2);
         }
     }
 
@@ -406,29 +417,21 @@ public class PlayerController : MonoBehaviour
 
                 if ((tuple.x > 0) && (!vsides[tuple.x - 1, tuple.y]))
                 {
-                    // Can move left
-
                     queue.Enqueue(new IntTuple(tuple.x - 1, tuple.y));
                 }
 
                 if ((tuple.x < (w - 2)) && (!vsides[tuple.x, tuple.y]))
                 {
-                    // Can move right
-
                     queue.Enqueue(new IntTuple(tuple.x + 1, tuple.y));
                 }
 
                 if ((tuple.y > 0) && (!hsides[tuple.x, tuple.y - 1]))
                 {
-                    // Can move down
-
                     queue.Enqueue(new IntTuple(tuple.x, tuple.y - 1));
                 }
 
                 if ((tuple.y < (h - 2)) && (!hsides[tuple.x, tuple.y]))
                 {
-                    // Can move up
-
                     queue.Enqueue(new IntTuple(tuple.x, tuple.y + 1));
                 }
             }
