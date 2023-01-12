@@ -9,6 +9,10 @@ enum PlayerState
 
 public class PlayerController : MonoBehaviour
 {
+    [SerializeField] Itemmu item;
+    [SerializeField] GameObject normalSprite;
+    [SerializeField] GameObject speedSprite;
+
     public float speed;
     Vector3 targetPos;
 
@@ -32,19 +36,17 @@ public class PlayerController : MonoBehaviour
     /// </summary>
     [SerializeField] float spiralDistance = 0.01f;
 
-    float inputX;
-    float inputY;
-
     float mapHalfWidth;
     float mapHalfHeight;
+
+    float inputX;
+    float inputY;
 
     Vector3 movement;
     bool movingx;
     bool movingy;
     bool handled;
     float desSign;
-
-    float deltaTime;
 
     void Start()
     {
@@ -88,7 +90,6 @@ public class PlayerController : MonoBehaviour
         movingx = false;
         movingy = false;
         handled = false;
-        deltaTime = Time.deltaTime;
 
         //Calculate Target Position to move
         if (Mathf.Max(Mathf.Abs(inputX), Mathf.Abs(inputY)) < 0.3f)
@@ -100,15 +101,18 @@ public class PlayerController : MonoBehaviour
         {
             if (Mathf.Abs(inputX) > Mathf.Abs(inputY))
             {
-                movement = new Vector3(speed * deltaTime * Mathf.Sign(inputX), 0.0f, 0.0f);
+                movement = new Vector3(speed * Time.deltaTime * Mathf.Sign(inputX), 0.0f, 0.0f);
                 movingx = true;
                 desSign = Mathf.Sign(inputX);
+                transform.localEulerAngles = new Vector3(0f, 0f, 90 * -desSign);
+                
             }
             else
             {
-                movement = new Vector3(0.0f, speed * deltaTime * Mathf.Sign(inputY), 0.0f);
+                movement = new Vector3(0.0f, speed * Time.deltaTime * Mathf.Sign(inputY), 0.0f);
                 movingy = true;
                 desSign = Mathf.Sign(inputY);
+                transform.localEulerAngles = new Vector3(0f, 0f, desSign > 0 ? 0 : 180);
             }
         }
 
@@ -295,7 +299,7 @@ public class PlayerController : MonoBehaviour
     //Check player can move to target position?
     public bool ValidToMoveTo(Vector3 targetPos)
     {
-        return InGrid(targetPos) && !DrawRects.InRects(targetPos);
+        return InGrid(targetPos) && !DrawRects.instance.InRects(targetPos);
     }
 
     //Check Player is moving in gridbackground
@@ -345,6 +349,16 @@ public class PlayerController : MonoBehaviour
         else
         {
             DrawRects.instance.AddRects(drawRects2);
+        }
+
+        CheckItem();
+    }
+
+    void CheckItem()
+    {
+        if(DrawRects.instance.InRects(item.transform.position))
+        {
+            item.GetItem();
         }
     }
 
@@ -538,5 +552,19 @@ public class PlayerController : MonoBehaviour
         }
 
         return rcList;
+    }
+
+    public void SpeedUp()
+    {
+        normalSprite.SetActive(false);
+        speedSprite.SetActive(true);
+        speed += 5;
+    }
+
+    public void SpeedDown() 
+    {
+        normalSprite.SetActive(true);
+        speedSprite.SetActive(false);
+        speed -= 5;
     }
 }

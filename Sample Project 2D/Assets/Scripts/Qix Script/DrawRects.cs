@@ -107,15 +107,14 @@ public class DrawRects : MonoBehaviour
         mesh.triangles = triangles;
         mesh.RecalculateNormals();
 
-        ScoreManager.Score = score;
+        GManager.instance.scoreManager.AddScore(score);
 
         GetComponent<MeshFilter>().mesh = mesh;
 
         newRects = false;
     }
 
-
-    public static bool InRects(Vector3 point)
+    public bool InRects(Vector3 point)
     {
         bool rc = false;
 

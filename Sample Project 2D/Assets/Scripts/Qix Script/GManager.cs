@@ -1,9 +1,13 @@
+using DG.Tweening;
+using System.Collections;
 using UnityEngine;
 
+//AKA GameManager
 public class GManager : MonoBehaviour
 {
     public static GManager instance;
-    
+    public ScoreManager scoreManager;
+
     [HideInInspector] public float width;
     [HideInInspector] public float height;
 
@@ -11,7 +15,7 @@ public class GManager : MonoBehaviour
 
     private void Awake()
     {
-        if(instance != null)
+        if (instance != null)
         {
             Destroy(instance);
         }
