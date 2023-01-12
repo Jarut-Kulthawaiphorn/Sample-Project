@@ -26,7 +26,6 @@ public class DrawRects : MonoBehaviour
     int uvOffset;
     int triangleOffset;
 
-    [SerializeField] GameObject map;
     float mapWidth;
     float mapHeight;
 
@@ -55,8 +54,8 @@ public class DrawRects : MonoBehaviour
 
         score = 0.0f;
 
-        mapWidth = map.GetComponent<SpriteRenderer>().size.x;
-        mapHeight = map.GetComponent<SpriteRenderer>().size.y;
+        mapWidth = GManager.instance.width;
+        mapHeight = GManager.instance.height;
     }
     void Start()
     {

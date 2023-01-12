@@ -35,9 +35,8 @@ public class PlayerController : MonoBehaviour
     float inputX;
     float inputY;
 
-    [SerializeField] GameObject map;
-    float mapWidth;
-    float mapHeight;
+    float mapHalfWidth;
+    float mapHalfHeight;
 
     Vector3 movement;
     bool movingx;
@@ -52,22 +51,22 @@ public class PlayerController : MonoBehaviour
         lines = new List<Line>();
 
         //Get Map scale
-        mapWidth = map.GetComponent<SpriteRenderer>().size.x / 2;
-        mapHeight = map.GetComponent<SpriteRenderer>().size.y / 2;
+        mapHalfWidth = GManager.instance.width * 0.5f;
+        mapHalfHeight = GManager.instance.height * 0.5f;
 
         //Wall Line
-        lines.Add(new Line(new Vector3(mapWidth, mapHeight, 0), new Vector3(mapWidth, -mapHeight, 0)));
-        lines.Add(new Line(new Vector3(mapWidth, -mapHeight, 0), new Vector3(-mapWidth, -mapHeight, 0)));
-        lines.Add(new Line(new Vector3(-mapWidth, -mapHeight, 0), new Vector3(-mapWidth, mapHeight, 0)));
-        lines.Add(new Line(new Vector3(-mapWidth, mapHeight, 0), new Vector3(mapWidth, mapHeight, 0)));
+        lines.Add(new Line(new Vector3(mapHalfWidth, mapHalfHeight, 0), new Vector3(mapHalfWidth, -mapHalfHeight, 0)));
+        lines.Add(new Line(new Vector3(mapHalfWidth, -mapHalfHeight, 0), new Vector3(-mapHalfWidth, -mapHalfHeight, 0)));
+        lines.Add(new Line(new Vector3(-mapHalfWidth, -mapHalfHeight, 0), new Vector3(-mapHalfWidth, mapHalfHeight, 0)));
+        lines.Add(new Line(new Vector3(-mapHalfWidth, mapHalfHeight, 0), new Vector3(mapHalfWidth, mapHalfHeight, 0)));
 
         xVector3s = new List<float>();
         yVector3s = new List<float>();
 
-        xVector3s.Add(-mapWidth);
-        xVector3s.Add(mapWidth);
-        yVector3s.Add(-mapHeight);
-        yVector3s.Add(mapHeight);
+        xVector3s.Add(-mapHalfWidth);
+        xVector3s.Add(mapHalfWidth);
+        yVector3s.Add(-mapHalfHeight);
+        yVector3s.Add(mapHalfHeight);
 
         currentLine = lines[2];
 
@@ -216,8 +215,8 @@ public class PlayerController : MonoBehaviour
                     }
                     else
                     {
-                        targetPos = new Vector3(Mathf.Clamp(targetPos.x, -mapWidth, mapWidth),
-                                                Mathf.Clamp(targetPos.y, -mapHeight, mapHeight),
+                        targetPos = new Vector3(Mathf.Clamp(targetPos.x, -mapHalfWidth, mapHalfWidth),
+                                                Mathf.Clamp(targetPos.y, -mapHalfHeight, mapHalfHeight),
                                                 0.0f);
                     }
 
@@ -302,10 +301,10 @@ public class PlayerController : MonoBehaviour
     //Check Player is moving in gridbackground
     public bool InGrid(Vector3 targetPos)
     {
-        return ((targetPos.x >= -mapWidth) &&
-                (targetPos.x <= mapWidth) &&
-                (targetPos.y >= -mapHeight) &&
-                (targetPos.y <= mapHeight));
+        return ((targetPos.x >= -mapHalfWidth) &&
+                (targetPos.x <= mapHalfWidth) &&
+                (targetPos.y >= -mapHalfHeight) &&
+                (targetPos.y <= mapHalfHeight));
     }
 
     void FillDrawnArea()
@@ -341,7 +340,6 @@ public class PlayerController : MonoBehaviour
         //check zone to draw rect
         if (area1 <= area2)
         {
-
             DrawRects.instance.AddRects(drawRects1);
         }
         else
@@ -455,8 +453,8 @@ public class PlayerController : MonoBehaviour
     {
         foreach (Line line in lines)
         {
-            if ((Mathf.Abs(line.start.x) == mapWidth) &&
-                (Mathf.Abs(line.start.y) == mapHeight))
+            if ((Mathf.Abs(line.start.x) == mapHalfWidth) &&
+                (Mathf.Abs(line.start.y) == mapHalfHeight))
             {
                 // Starts in a corner - ignore it
                 continue;

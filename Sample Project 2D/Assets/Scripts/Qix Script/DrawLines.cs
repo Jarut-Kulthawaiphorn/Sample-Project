@@ -8,7 +8,7 @@ public class DrawLines : MonoBehaviour
 
     static List<Line> lines;
     static bool newLines = true;
-    [SerializeField] float width = 1f;
+    public float width = 1f;
 
     private void Awake()
     {

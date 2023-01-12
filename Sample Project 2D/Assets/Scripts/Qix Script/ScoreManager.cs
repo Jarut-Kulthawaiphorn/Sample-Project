@@ -22,16 +22,16 @@ public class ScoreManager : MonoBehaviour
     {
         int pc = (int)(100.0f * Score / 4.0f);
         guitext.text = "Score: " + pc + "%";
-        guitext.text += "\nTarget: " + Target + "%";
+        //guitext.text += "\nTarget: " + Target + "%";
 
-        if (Dead)
-        {
-            guitext.text += "\nYOU LOSE!";
-        }
-        else if (pc > Target)
-        {
-            guitext.text += "\nYOU WIN!";
-        }
+        //if (Dead)
+        //{
+        //    guitext.text += "\nYOU LOSE!";
+        //}
+        //else if (pc > Target)
+        //{
+        //    guitext.text += "\nYOU WIN!";
+        //}
     }
 
 

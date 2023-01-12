@@ -3,8 +3,13 @@ using UnityEngine;
 [RequireComponent(typeof(MeshRenderer)), RequireComponent(typeof(MeshFilter))]
 public class PlayerTrail : MonoBehaviour
 {
-    [SerializeField] float width = 0.01f;
     public PlayerController player;
+    float width;
+
+    private void Start()
+    {
+        width = DrawLines.instance.width;
+    }
 
     void Update()
     {
